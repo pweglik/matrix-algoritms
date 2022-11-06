@@ -6,3 +6,5 @@
 *.fot
 *.fdb_latexmk
 *.synctex.gz
+*.toc
+*.txt

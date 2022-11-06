@@ -79,10 +79,10 @@
     \subsection{Kod algorytmu}
     \begin{lstlisting}[language=Python]
     def binet_core_algorithm(
-                                A: np.ndarray, 
-                                B: np.ndarray, 
-                                counter: Counter
-                            ) -> np.ndarray:
+        A: np.ndarray, 
+        B: np.ndarray, 
+        counter: Counter
+    ) -> np.ndarray:
         add = counter.add
         sub = counter.sub
         mul = counter.mul
@@ -127,7 +127,9 @@
     \end{figure}
 
     \subsection{Analiza złożoności}
-
+    W każdym mnożeniu macierzy o rozmiarze $n$ wykonujemy 8 podwywołań
+    algorytmu na macierzach o rozmiarzach $n/2$. Taka rekurencja prowadzi do
+    złożoności $O(n^{log_2(8)}) = O(n^{3})$  (twierdzenie o rekurencji uniwersalnej).
 
     \subsection{Porównanie z matlabem}
     Matlab:
@@ -155,6 +157,135 @@
     [ 60  72  84]
     [ 72  87 102]]
     \end{lstlisting}
-        
+    
+    \newpage
+
+    \section{Algorytm Strassen'a}
+
+    \subsection{Opis algorytmu}
+    W porównaniu z algorytmem Binét'a w kazdym podwywołaniu użyjemy tylko
+    7 mnożeń, co pozwala na osiągnięcie lepszej złożoności obliczeniowej.
+    Ponownie używamy "divide and conquer". Stosujemy wzory:
+    Stosujemy wzór:
+    \begin{align*}
+    P_{1} =& (A_{11} + A_{22})(B_{11} + B_{22}) \\
+    P_{2} =& (A_{21} + A_{22})B_{11} \\
+    P_{3} =& A_{11}(B_{12} - B_{22}) \\
+    P_{4} =& A_{22}(B_{21} - B_{11}) \\
+    P_{5} =& (A_{11} + A_{12})B_{22} \\
+    P_{6} =& (A_{21} - A_{11})(B_{11} + B_{12}) \\
+    P_{7} =& (A_{12} - A_{22})(B_{21} + B_{22}) \\
+    \begin{bmatrix}
+        A_{11} & A_{12} \\
+        A_{21} & A_{22} \\ 
+    \end{bmatrix}
+    \times &
+    \begin{bmatrix}
+        B_{11} & B_{12} \\
+        B_{21} & B_{22} \\ 
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        (P_{1} + P_{4} - P_{5} + P_{7}) & (P_{3} + P_{5}) \\
+        (P_{2} + P_{4}) & (P_{1} - P_{2} + P_{3} + P_{6}) \\ 
+    \end{bmatrix}
+    \end{align*}
+    
+    \subsection{Kod algorytmu}
+    \begin{lstlisting}[language=Python]
+    def strassen_core_algorith(
+        A: np.ndarray, 
+        B: np.ndarray, 
+        counter: Counter
+    ) -> np.ndarray:
+        add = counter.add
+        sub = counter.sub
+        mul = counter.mul
+        if A.size > 1:
+            split_at = A.shape[0]//2
+            A11, A12, A21, A22 = split(A, split_at, split_at)
+            B11, B12, B21, B22 = split(B, split_at, split_at)
+            
+            M1 = strassen_core_algorith(add(A11, A22), 
+                add(B11, B22), counter)
+            M2 = strassen_core_algorith(add(A21, A22), 
+                B11, counter)
+            M3 = strassen_core_algorith(A11, 
+                sub(B12, B22), counter)
+            M4 = strassen_core_algorith(A22, 
+                sub(B21, B11), counter)
+            M5 = strassen_core_algorith(add(A11, A12), 
+                B22, counter)
+            M6 = strassen_core_algorith(sub(A21, A11), 
+                add(B11, B12), counter)
+            M7 = strassen_core_algorith(sub(A12, A22), 
+                add(B21, B22), counter)    
+    
+            C11 = add(sub(add(M1, M4), M5), M7)
+            C12 = add(M3, M5)
+            C21 = add(M2, M4)
+            C22 = add(add(sub(M1, M2), M3), M6)
+    
+            return np.concatenate(
+                [
+                    np.concatenate([C11, C12], axis = 1),
+                    np.concatenate([C21, C22],axis = 1)
+                ],
+                axis = 0)
+        else:
+            return mul(A, B)
+    \end{lstlisting}
+
+    \subsection{Benchmarki}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.6\linewidth]{img/strassen_times.png}
+        \caption{Wykres czasu od rozmiaru macierzy}
+        \label{fig:strassen_times}
+    \end{figure}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.6\linewidth]{img/strassen_flops.png}
+        \caption{Wykres ilości operacji od rozmiaru macierzy}
+        \label{fig:strassen_flops}
+    \end{figure}
+
+    \subsection{Analiza złożoności}
+    Analogicznie jak w algorytmie Binét'a macierz 
+    dzielona jest i rozpatywana jako 4 podmacierze, 
+    jednak w tym przypadku nastepuj 7 podwywołan 
+    algorytmu, co ostatecznie daje złożonosć $O(n^{log2(7)}) \approx O(n^{2.87})$.
+
+    \subsection{Porównanie z matlabem}
+    Matlab:
+    \begin{lstlisting}[language=Matlab]
+    A = [1 3 5; 2 4 6; 3 5 7];
+    B = [1 2 3; 4 5 6; 7 8 9];
+
+    disp(A * B);
+
+    % output
+    >> matrix_mul
+    48    57    66
+    60    72    84
+    72    87   102
+    \end{lstlisting}
+    Python:
+    \begin{lstlisting}[language=Python]
+    A = np.array([[1, 3, 5], [2, 4, 6], [3, 5, 7]])
+    B = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    
+    print(strassen_algorith(A, B, Counter()))
+
+    # output
+    [[ 48  57  66]
+    [ 60  72  84]
+    [ 72  87 102]]
+    \end{lstlisting}
+    
+    \newpage
+
 
 \end{document}
