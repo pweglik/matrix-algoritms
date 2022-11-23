@@ -105,17 +105,19 @@ def inverse(A):
 
 \subsection{Benchmarki}
 
-\begin{center}
+
 \begin{figure}[H]
-  \includegraphics[width=15cm]{inverse_time.png}
+    \centering
+  \includegraphics[width=0.6\linewidth]{img/inverse_time.png}
   \caption{Wykres czasu od rozmiaru macierzy.}
 \end{figure}
 
 \begin{figure}[H]
-  \includegraphics[width=15cm]{inverse_flops.png}
+    \centering
+  \includegraphics[width=0.6\linewidth]{img/inverse_flops.png}
   \caption{Wykres libczby operacji od rozmiaru macierzy.}
 \end{figure}
-\end{center}
+
 
 \subsection{Złożoność obliczeniowa}
 \qquad Złożoność obliczeniowa algorytmu zależy od algorytmu mnożenia macierzy jaki został wykorzytany do obliczeń. W naszym przypadku był to algorytm Strassen'a, którego złożoność obliczeniowa wynosi: $O(n^{2.807}$).
@@ -211,21 +213,31 @@ def LU(A):
 \end{lstlisting}
 \subsection{Benchmarki}
 
-\begin{center}
+
 \begin{figure}[H]
-  \includegraphics[width=15cm]{lu_time.png}
+    \centering
+  \includegraphics[width=0.6\linewidth]{img/lu_time.png}
   \caption{Wykres czasu od rozmiaru macierzy.}
 \end{figure}
 
 \begin{figure}[H]
-  \includegraphics[width=15cm]{lu_flops.png}
+    \centering
+  \includegraphics[width=0.6\linewidth]{img/lu_flops.png}
   \caption{Wykres libczby operacji od rozmiaru macierzy.}
 \end{figure}
-\end{center}
+
 
 \subsection{Złożoność obliczeniowa}
 
-\qquad Złożoność obliczeniowa faktoryzacji LU to w przybliżeniu $O(n^{2.529})$.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{img/lu_complexity.png}
+    \caption{Wykres liczby operacji od rozmiaru macierzy z naniesioną dodatkowo krzywą y = 1.8 $x^{2.807}$}
+\end{figure}
+
+
+\qquad Złożoność obliczeniowa faktoryzacji LU to złożoność 
+zastosowanego algorytmu mnożenia macierzy $O(n^{2.807})$.
 
 \subsection{Porównanie rozwiązania}
 \begin{lstlisting}
@@ -243,12 +255,11 @@ print(U)
 [[  1.        ,   8.        ,   5.        ],
  [  0.        , -12.        ,  -4.        ],
  [  0.        ,   0.        ,  -1.66666667]]
-\end{lstlisting} \\
-Wyniki w Wolframie:
-\begin{center}
-  \includegraphics{image.png}
-  \caption{Wynik faktoryzacji LU uzyskane przy użyciu Wolframa.}
-\end{center}
+\end{lstlisting} 
+
+Wynik produkowany przez SciPy odibegał nieco od naszego (tzn. L i U były różne),
+ale nasze L i U mnożą się do A, więc wszystko jest w porządku
+
 \section{Rekurencyjne obliczanie wyznacznika}
 
 \subsection{Opis algorytmu}
@@ -296,18 +307,20 @@ def determinant(A):
 \subsection{Benchmarki}
 \begin{center}
 \begin{figure}[H]
-  \includegraphics[width=15cm]{tru_time.png}
+  \includegraphics[width=0.6\linewidth]{img/det_time.png}
   \caption{Wykres czasu od rozmiaru macierzy.}
 \end{figure}
 
 \begin{figure}[H]
-  \includegraphics[width=15cm]{tru_flops.png}
+  \includegraphics[width=0.6\linewidth]{img/det_flops.png}
   \caption{Wykres libczby operacji od rozmiaru macierzy.}
 \end{figure}
 \end{center}
 \subsection{Złożoność obliczeniowa}
 
-\qquad Złożoność obliczeniowa algorytmu zależy od funkcji wyznaczającej LU oraz od rozmiaru macierzy. Wiemy także, że złożoność obliczeniowa funkcji faktoryzującej jest zależna od rozmiaru macierzy i nie jest ona liniowa. Ostatecznie więc uzyskujemy: $O(n^{2.529})$
+\qquad Złożoność obliczeniowa algorytmu 
+zależy od funkcji wyznaczającej LU oraz od rozmiaru macierzy. 
+Ostatecznie więc uzyskujemy: $O(n^{2.807})$
 
 \subsection{Porównanie rozwiązania}
 Wyniki naszego algorytmu: \\
