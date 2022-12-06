@@ -63,7 +63,8 @@ Potem rekurencyjnie wykonujemy tę procedurę dla każdego dziecka.
 Funkcja kompresująca:
 
 \begin{lstlisting}[language=Python]
-    def compress_matrix(A: np.ndarray, first_row: int, last_row: int, first_col: int, last_col: int, r: int) -> TreeLeaf:
+    def compress_matrix(A: np.ndarray, first_row: int, last_row: int, 
+    first_col: int, last_col: int, r: int) -> TreeLeaf:
         v = TreeLeaf()
         v.size = (first_row, last_row, first_col, last_col)
         U, D, V = truncatedSVD(A, r + 1)
@@ -80,22 +81,29 @@ Funkcja kompresująca:
 Funkcja budująca drzewo
 
 \begin{lstlisting}[language=Python]
-    def create_tree(A: np.ndarray, first_row: int, last_row: int, first_col: int, last_col: int, r: int, eps: float) -> TreeNode:
+    def create_tree(A: np.ndarray, first_row: int, last_row: int, 
+    first_col: int, last_col: int, r: int, eps: float) -> TreeNode:
         new_A = A[first_row : last_row, first_col : last_col]
         U, D, V = truncatedSVD(new_A, r + 1)
         if r + 1 > D.shape[0] or D[r] < eps:
             if D.shape[0] <= 2:
-                v = compress_matrix(new_A, first_row, last_row, first_col, last_col, 1)
+                v = compress_matrix(new_A, first_row, last_row, 
+                first_col, last_col, 1)
             else:
-                v = compress_matrix(new_A, first_row, last_row, first_col, last_col, r)
+                v = compress_matrix(new_A, first_row, last_row, 
+                first_col, last_col, r)
         else:
             v = TreeSplit()
             middle_row = (first_row + last_row) // 2
             middle_col = (first_col + last_col) // 2
-            v.left_upper = create_tree(A, first_row, middle_row, first_col, middle_col, r, eps)
-            v.right_upper = create_tree(A, first_row, middle_row, middle_col, last_col, r, eps)
-            v.left_lower = create_tree(A, middle_row, last_row, first_col, middle_col, r, eps)
-            v.right_lower = create_tree(A, middle_row, last_row, middle_col, last_col, r, eps)
+            v.left_upper = create_tree(A, first_row, middle_row, 
+            first_col, middle_col, r, eps)
+            v.right_upper = create_tree(A, first_row, middle_row, 
+            middle_col, last_col, r, eps)
+            v.left_lower = create_tree(A, middle_row, last_row, 
+            first_col, middle_col, r, eps)
+            v.right_lower = create_tree(A, middle_row, last_row, 
+            middle_col, last_col, r, eps)
         return v
 \end{lstlisting}
 
@@ -104,37 +112,93 @@ Funkcja budująca drzewo
 \subsection{Czasy dla różnego stopnia wypłnienia macierzy}
 
 \begin{figure}[H]
+    \captionsetup{justification=centering}
     \centering
-  \includegraphics[width=0.6\linewidth]{img/output.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 10\%.}
+  \includegraphics[width=0.6\linewidth]{img/fill01.png}
+  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 10\% z dopasowaną prostą y = 0.3.}
 \end{figure}
 
 \begin{figure}[H]
+    \captionsetup{justification=centering}
     \centering
-  \includegraphics[width=0.6\linewidth]{img/output.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 10\%.}
+  \includegraphics[width=0.6\linewidth]{img/fill02.png}
+  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 20\% z dopasowaną prostą y = 0.5.}
 \end{figure}
 
 \begin{figure}[H]
+    \captionsetup{justification=centering}
     \centering
-  \includegraphics[width=0.6\linewidth]{img/output.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 10\%.}
+  \includegraphics[width=0.6\linewidth]{img/fill03.png}
+  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 30\% z dopasowaną prostą $y = 0.5 * 10^{-7} * x + 0.6$.}
 \end{figure}
 
 \begin{figure}[H]
+    \captionsetup{justification=centering}
     \centering
-  \includegraphics[width=0.6\linewidth]{img/output.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 10\%.}
+  \includegraphics[width=0.6\linewidth]{img/fill04.png}
+  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 40\% z dopasowaną prostą y = 0.66.}
 \end{figure}
 
 \begin{figure}[H]
+    \captionsetup{justification=centering}
     \centering
-  \includegraphics[width=0.6\linewidth]{img/output.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 10\%.}
+  \includegraphics[width=0.6\linewidth]{img/fill05.png}
+  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 50\% z dopasowaną prostą $y = 0.4 * 10^{-7} * x + 0.7$.}
+\end{figure}
+
+\subsection{Rysunki}
+
+\begin{figure}[H]
+    \captionsetup{justification=centering}
+    \centering
+  \includegraphics[width=0.6\linewidth]{img/draw01.png}
+  \caption{Wizualizacja podziału macierzy dla wypełnienia 10\%.}
+\end{figure}
+
+\begin{figure}[H]
+    \captionsetup{justification=centering}
+    \centering
+  \includegraphics[width=0.6\linewidth]{img/draw02.png}
+  \caption{Wizualizacja podziału macierzy dla wypełnienia 20\%.}
+\end{figure}
+
+\begin{figure}[H]
+    \captionsetup{justification=centering}
+    \centering
+  \includegraphics[width=0.6\linewidth]{img/draw03.png}
+  \caption{Wizualizacja podziału macierzy dla wypełnienia 30\%.}
+\end{figure}
+
+\begin{figure}[H]
+    \captionsetup{justification=centering}
+    \centering
+  \includegraphics[width=0.6\linewidth]{img/draw04.png}
+  \caption{Wizualizacja podziału macierzy dla wypełnienia 40\%.}
+\end{figure}
+
+\begin{figure}[H]
+    \captionsetup{justification=centering}
+    \centering
+  \includegraphics[width=0.6\linewidth]{img/draw05.png}
+  \caption{Wizualizacja podziału macierzy dla wypełnienia 50\%.}
 \end{figure}
 
 \subsection{Błąd dekompresji}
 
-Błąd średniokwadratowy wynosi $ 12 $
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c| } 
+    
+    \hline
+    Wypełnienie & 0.1 & 0.2 & 0.3 & 0.4 & 0.5\\ 
+    \hline
+    Błąd & bliski 0 & bliski 0 & 0.008 & 0.016 & 0.02 \\ 
+    \hline
+    
+\end{tabular}
+\caption{Błąd średniokwadratowy kompresji dla macierzy $128 x 128$}
+\end{center}
+\end{table}
+
 
 \end{document}
