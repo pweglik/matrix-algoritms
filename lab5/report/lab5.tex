@@ -30,8 +30,8 @@
 
 \title {
         Algorytmy Macierzowe \\
-        Sprawozdanie 3 \\
-        Rekurencyjne kompresja macierzy
+        Sprawozdanie 5 \\
+        Reordering w celu optymalizacji kompresji macierzy
 
 }
 
@@ -43,162 +43,81 @@
 
 \maketitle
 
-\tableofcontents
-
 \newpage
-
-\section{Opis algorytmu}
-Traktujemy macierz jak drzewo czwórkowe. Każda ćwiartka macierzy odpowiada
-jednemu węzłowi-dziecku. Podczas każdego podziału podejmujemy decyzję czy będziemy
-to dziecko dzielić dalej czy raczej kompresować.
-
-Kompresja opłaca nam się wtedy jeśli rząd macierzy jest niewielki.
-Wtedy używając algorytmu $TruncatedSVD$ możemy zmniejszyć złożoność pamięciową 
-z $O(n^{2})$ do praktycznie $O(n)$, jeśli rząd macierzy jest dostatecznie mały.
-
-Potem rekurencyjnie wykonujemy tę procedurę dla każdego dziecka.
 
 \section{Fragmenty kodu}
 
-Funkcja kompresująca:
+Funkcja realizująca minimum degree reordering:
 
 \begin{lstlisting}[language=Python]
-    def compress_matrix(A: np.ndarray, first_row: int, last_row: int, 
-    first_col: int, last_col: int, r: int) -> TreeLeaf:
-        v = TreeLeaf()
-        v.size = (first_row, last_row, first_col, last_col)
-        U, D, V = truncatedSVD(A, r + 1)
-        if consist_of_zeros(A):
-            v.rank = 0
-        else:
-            v.rank = r
-            v.singular_values = D[0 : r]
-            v.U = U[:, 0 : r]
-            v.V =  V[0 : r, :]
-        return v
+    def minimum_degree_transformation(input_matrix: np.ndarray) -> np.ndarray:
+    E = list(zip(*np.nonzero(input_matrix)))
+    graph = [{i} for i in range(input_matrix.shape[0])]
+    for e in E:
+        graph[e[0]].add(e[1])
+        graph[e[1]].add(e[0])
+
+    order = []
+    for _ in range(len(graph)):
+        v = -1
+        min_deg = len(input_matrix)
+
+        for j, s in enumerate(graph):
+            if len(s) != 0 and len(s) < min_deg:
+                v = j
+                min_deg = len(s)
+
+        order.append(v)
+        for s in graph:
+            if v in s:
+                s.remove(v)
+        graph[v].clear()
+
+    inverted = [None for _ in range(len(order))]
+    for i, o in enumerate(order):
+        inverted[o] = i
+
+    result = np.zeros(input_matrix.shape)
+    for coord in E:
+        result[inverted[coord[0]]][inverted[coord[1]]] = input_matrix[coord]
+
+    return result
 \end{lstlisting}
 
-Funkcja budująca drzewo
-
-\begin{lstlisting}[language=Python]
-    def create_tree(A: np.ndarray, first_row: int, last_row: int, 
-    first_col: int, last_col: int, r: int, eps: float) -> TreeNode:
-        new_A = A[first_row : last_row, first_col : last_col]
-        U, D, V = truncatedSVD(new_A, r + 1)
-        if r + 1 > D.shape[0] or D[r] < eps:
-            if D.shape[0] <= 2:
-                v = compress_matrix(new_A, first_row, last_row, 
-                first_col, last_col, 1)
-            else:
-                v = compress_matrix(new_A, first_row, last_row, 
-                first_col, last_col, r)
-        else:
-            v = TreeSplit()
-            middle_row = (first_row + last_row) // 2
-            middle_col = (first_col + last_col) // 2
-            v.left_upper = create_tree(A, first_row, middle_row, 
-            first_col, middle_col, r, eps)
-            v.right_upper = create_tree(A, first_row, middle_row, 
-            middle_col, last_col, r, eps)
-            v.left_lower = create_tree(A, middle_row, last_row, 
-            first_col, middle_col, r, eps)
-            v.right_lower = create_tree(A, middle_row, last_row, 
-            middle_col, last_col, r, eps)
-        return v
-\end{lstlisting}
-
-\section{Benchmarki}
-
-\subsection{Czasy dla różnego stopnia wypłnienia macierzy}
+\section{Rysunki}
 
 \begin{figure}[H]
     \captionsetup{justification=centering}
     \centering
-  \includegraphics[width=0.6\linewidth]{img/fill01.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 10\% z dopasowaną prostą y = 0.3.}
+  \includegraphics[width=0.6\linewidth]{img/dense.png}
+  \caption{Macierz gęsta (0.5) przed reorderingiem}
 \end{figure}
 
 \begin{figure}[H]
     \captionsetup{justification=centering}
     \centering
-  \includegraphics[width=0.6\linewidth]{img/fill02.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 20\% z dopasowaną prostą y = 0.5.}
+  \includegraphics[width=0.6\linewidth]{img/dense_reorder.png}
+  \caption{Macierz gęsta (0.5) po reorderingu}
 \end{figure}
 
 \begin{figure}[H]
     \captionsetup{justification=centering}
     \centering
-  \includegraphics[width=0.6\linewidth]{img/fill03.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 30\% z dopasowaną prostą $y = 0.5 * 10^{-7} * x + 0.6$.}
+  \includegraphics[width=0.6\linewidth]{img/sparse.png}
+  \caption{Macierz rzadka (0.01) przed reorderingiem}
 \end{figure}
 
 \begin{figure}[H]
     \captionsetup{justification=centering}
     \centering
-  \includegraphics[width=0.6\linewidth]{img/fill04.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 40\% z dopasowaną prostą y = 0.66.}
+  \includegraphics[width=0.6\linewidth]{img/sparse_reorder.png}
+  \caption{Macierz rzadka (0.01) po reorderingu}
 \end{figure}
 
-\begin{figure}[H]
-    \captionsetup{justification=centering}
-    \centering
-  \includegraphics[width=0.6\linewidth]{img/fill05.png}
-  \caption{Wykres czasu kompresji od rozmiaru macierzy dla wypełnienia macierzy 50\% z dopasowaną prostą $y = 0.4 * 10^{-7} * x + 0.7$.}
-\end{figure}
 
-\subsection{Rysunki}
-
-\begin{figure}[H]
-    \captionsetup{justification=centering}
-    \centering
-  \includegraphics[width=0.6\linewidth]{img/draw01.png}
-  \caption{Wizualizacja podziału macierzy dla wypełnienia 10\%.}
-\end{figure}
-
-\begin{figure}[H]
-    \captionsetup{justification=centering}
-    \centering
-  \includegraphics[width=0.6\linewidth]{img/draw02.png}
-  \caption{Wizualizacja podziału macierzy dla wypełnienia 20\%.}
-\end{figure}
-
-\begin{figure}[H]
-    \captionsetup{justification=centering}
-    \centering
-  \includegraphics[width=0.6\linewidth]{img/draw03.png}
-  \caption{Wizualizacja podziału macierzy dla wypełnienia 30\%.}
-\end{figure}
-
-\begin{figure}[H]
-    \captionsetup{justification=centering}
-    \centering
-  \includegraphics[width=0.6\linewidth]{img/draw04.png}
-  \caption{Wizualizacja podziału macierzy dla wypełnienia 40\%.}
-\end{figure}
-
-\begin{figure}[H]
-    \captionsetup{justification=centering}
-    \centering
-  \includegraphics[width=0.6\linewidth]{img/draw05.png}
-  \caption{Wizualizacja podziału macierzy dla wypełnienia 50\%.}
-\end{figure}
-
-\subsection{Błąd dekompresji}
-
-\begin{table}[H]
-\begin{center}
-\begin{tabular}{ |c|c|c|c|c|c| } 
-    
-    \hline
-    Wypełnienie & 0.1 & 0.2 & 0.3 & 0.4 & 0.5\\ 
-    \hline
-    Błąd & bliski 0 & bliski 0 & 0.008 & 0.016 & 0.02 \\ 
-    \hline
-    
-\end{tabular}
-\caption{Błąd średniokwadratowy kompresji dla macierzy $128 x 128$}
-\end{center}
-\end{table}
-
+\section{Wnioseki}
+Widzimy, że dla macierzy gęstych stosowanie reorderingu mija się z celem i nie jest efektywne.
+Z kolei podczas używania macierzy rzadkich, możemy uzyskać znaczą optymalizację.
+Im rzadsza macierz tym lepsze rezultaty daje reordering.
 
 \end{document}
